@@ -72,14 +72,14 @@ class ImplicationMapper(Agent):
     model = "claude-opus-4-7"
 
     K_INITIATIVES = 3
-    K_CUSTOMERS = 5
+    K_CUSTOMERS = 4
+    MAX_SIGNALS_PER_RUN = 3  # serverless 30s budget; ~7s per Opus call
 
     async def run(self, ctx: RunContext, signal_id: str | None = None, **kwargs: Any) -> dict[str, Any]:
         sb = get_supabase()
         if signal_id:
             signals = sb.table("signals").select("*").eq("id", signal_id).execute().data
         else:
-            # Pull recent signals that don't yet have an implication
             ctx.emit("thought", "Finding recent signals without implications")
             recent = sb.table("signals").select("id,title,summary,source_name,source_url,signal_kind,embedding,primary_organization_id") \
                 .order("detected_at", desc=True).limit(50).execute().data
@@ -88,13 +88,16 @@ class ImplicationMapper(Agent):
                 for row in sb.table("implications").select("signal_id").execute().data
             }
             signals = [s for s in recent if s["id"] not in existing_implication_signal_ids]
-            ctx.emit("decision", f"{len(signals)} signals to process", new_signals=len(signals))
+            ctx.emit("decision", f"{len(signals)} signals without implications", new_signals=len(signals))
 
         if not signals:
             return {"implications_generated": 0}
 
+        signals = signals[: self.MAX_SIGNALS_PER_RUN]
+        ctx.emit("thought", f"Processing {len(signals)} (capped per serverless time budget)")
+
         generated = 0
-        for sig in signals[:20]:  # cap per-run cost
+        for sig in signals:
             try:
                 imp = await self._map_one(ctx, sig)
                 if imp:

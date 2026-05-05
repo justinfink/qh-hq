@@ -1,5 +1,6 @@
-"""Embeddings service. Tries Voyage AI first; falls back to local FastEmbed
-(if available); otherwise returns zero vectors for graceful degradation.
+"""Embeddings service. Tries Voyage AI first, then OpenAI, then local FastEmbed,
+then graceful zero-vector fallback. All produce 1024-dim vectors so the schema
+is invariant.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 EMBEDDING_DIM = 1024
 VOYAGE_MODEL = "voyage-3-large"
+OPENAI_MODEL = "text-embedding-3-small"  # supports custom dimensions
 FASTEMBED_MODEL = "BAAI/bge-large-en-v1.5"
 
 
@@ -26,11 +28,12 @@ def _fastembed_model():
         logger.info("Loading FastEmbed model: %s", FASTEMBED_MODEL)
         return TextEmbedding(model_name=FASTEMBED_MODEL)
     except ImportError:
-        logger.warning("fastembed not installed; embedding queries will return zero vectors")
+        logger.warning("fastembed not installed; trying other providers")
         return None
 
 
 _voyage_client = None
+_openai_client = None
 
 
 def _get_voyage():
@@ -45,6 +48,24 @@ def _get_voyage():
     return _voyage_client
 
 
+def _get_openai():
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            return None
+        try:
+            import httpx
+            _openai_client = httpx.AsyncClient(
+                base_url="https://api.openai.com/v1",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=15.0,
+            )
+        except ImportError:
+            return None
+    return _openai_client
+
+
 _cache: dict[str, list[float]] = {}
 
 
@@ -54,6 +75,27 @@ def _key(text: str, input_type: str) -> str:
 
 def _zero_vector() -> list[float]:
     return [0.0] * EMBEDDING_DIM
+
+
+async def _openai_embed(texts: list[str]) -> list[list[float]] | None:
+    client = _get_openai()
+    if client is None:
+        return None
+    try:
+        resp = await client.post(
+            "/embeddings",
+            json={
+                "input": texts,
+                "model": OPENAI_MODEL,
+                "dimensions": EMBEDDING_DIM,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return [item["embedding"] for item in data["data"]]
+    except Exception as exc:
+        logger.warning("OpenAI embedding failed: %s", exc)
+        return None
 
 
 async def embed_text(
@@ -69,6 +111,7 @@ async def embed_text(
     if key in _cache:
         return _cache[key]
 
+    # Provider 1: Voyage (highest quality if available)
     if settings.voyage_api_key:
         client = _get_voyage()
         if client:
@@ -80,17 +123,25 @@ async def embed_text(
                 _cache[key] = vec
                 return vec
             except Exception as exc:
-                logger.warning("Voyage embedding failed: %s", exc)
+                logger.warning("Voyage embedding failed, falling through: %s", exc)
 
+    # Provider 2: OpenAI (cheap, fast, serverless-friendly)
+    openai_result = await _openai_embed([text])
+    if openai_result:
+        vec = openai_result[0]
+        _cache[key] = vec
+        return vec
+
+    # Provider 3: Local FastEmbed (no key required, but heavy)
     model = _fastembed_model()
-    if model is None:
-        return _zero_vector()
+    if model is not None:
+        loop = asyncio.get_running_loop()
+        embeddings = await loop.run_in_executor(None, lambda: list(model.embed([text])))
+        vec = embeddings[0].tolist() if hasattr(embeddings[0], "tolist") else list(embeddings[0])
+        _cache[key] = vec
+        return vec
 
-    loop = asyncio.get_running_loop()
-    embeddings = await loop.run_in_executor(None, lambda: list(model.embed([text])))
-    vec = embeddings[0].tolist() if hasattr(embeddings[0], "tolist") else list(embeddings[0])
-    _cache[key] = vec
-    return vec
+    return _zero_vector()
 
 
 async def embed_batch(
@@ -118,7 +169,21 @@ async def embed_batch(
                         await asyncio.sleep(0.1)
                 return results
             except Exception as exc:
-                logger.warning("Voyage batch embedding failed: %s", exc)
+                logger.warning("Voyage batch embedding failed, falling through: %s", exc)
+
+    # OpenAI: batch up to 64 per call
+    openai_result = await _openai_embed(texts[:batch_size])
+    if openai_result:
+        results = list(openai_result)
+        for i in range(batch_size, len(texts), batch_size):
+            chunk = texts[i : i + batch_size]
+            more = await _openai_embed(chunk)
+            if more is None:
+                break
+            results.extend(more)
+            await asyncio.sleep(0.05)
+        if len(results) == len(texts):
+            return results
 
     model = _fastembed_model()
     if model is None:

@@ -54,12 +54,18 @@ class NewsScout(Agent):
     description = "Polls RSS, EDGAR, ClinicalTrials.gov; dedupes; classifies; persists signals."
     model = "claude-haiku-4-5-20251001"
 
-    BATCH_SIZE = 25  # number of items per Haiku triage call
+    BATCH_SIZE = 20  # number of items per Haiku triage call
+    MAX_BATCHES_PER_RUN = 1  # Vercel serverless 30s cap; cron triggers more often
+    MAX_FEEDS_PER_RUN = 8  # Cap feed-fetch fan-out for serverless time budget
 
     async def run(self, ctx: RunContext, **kwargs: Any) -> dict[str, Any]:
-        ctx.emit("thought", "Polling 17 RSS feeds for healthcare + regulatory signal")
-        raws = await fetch_all_feeds()
-        ctx.emit("tool_result", f"Pulled {len(raws)} candidates", source_count=17, candidate_count=len(raws))
+        from app.sources.rss import HEALTHCARE_FEEDS
+        # Rotate feeds across runs so all sources get covered
+        import random
+        feeds = random.sample(HEALTHCARE_FEEDS, k=min(self.MAX_FEEDS_PER_RUN, len(HEALTHCARE_FEEDS)))
+        ctx.emit("thought", f"Polling {len(feeds)} RSS feeds for healthcare + regulatory signal")
+        raws = await fetch_all_feeds(sources=feeds)
+        ctx.emit("tool_result", f"Pulled {len(raws)} candidates", source_count=len(feeds), candidate_count=len(raws))
 
         # Dedupe against existing signals by source_url
         ctx.emit("thought", "Deduplicating against existing signals in DB")
@@ -70,6 +76,11 @@ class NewsScout(Agent):
         }
         novel = [r for r in raws if r.url not in existing_urls]
         ctx.emit("decision", f"{len(novel)} novel candidates after dedupe", duplicates=len(raws) - len(novel))
+
+        # Cap to fit serverless time budget
+        if len(novel) > self.BATCH_SIZE * self.MAX_BATCHES_PER_RUN:
+            ctx.emit("decision", f"Capping to {self.BATCH_SIZE * self.MAX_BATCHES_PER_RUN} candidates (serverless budget)")
+            novel = novel[: self.BATCH_SIZE * self.MAX_BATCHES_PER_RUN]
 
         if not novel:
             return {"signals_ingested": 0, "novel_candidates": 0}
