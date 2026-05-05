@@ -2,7 +2,7 @@ import type {
   Organization, Initiative, FeedItem, AgentDef, AgentRun, Signal,
 } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://qh-hq-api.vercel.app";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, { cache: "no-store" });
