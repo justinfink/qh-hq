@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────
+   QH HQ design system — terminal aesthetic
+   Dark by default. Monospace for data. Minimal accent surface.
+   ───────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* Base surfaces — graphite scale, not pure black */
+  --color-bg: #0A0B0D;
+  --color-bg-1: #111316;
+  --color-bg-2: #16191D;
+  --color-bg-3: #1C2025;
+  --color-bg-4: #232830;
+  --color-line: #2A2F38;
+  --color-line-2: #353B45;
+  --color-line-strong: #4A5160;
+
+  /* Text */
+  --color-fg: #E8EAED;
+  --color-fg-2: #C9CDD4;
+  --color-fg-3: #8E95A2;
+  --color-fg-4: #5C6470;
+  --color-fg-5: #3D434E;
+
+  /* Single accent — restrained cyan that reads as "live data" */
+  --color-accent: #4ECCA3;
+  --color-accent-dim: #2D8A6E;
+  --color-accent-glow: rgba(78, 204, 163, 0.12);
+
+  /* Severity scale — tuned for terminal contrast */
+  --color-critical: #FF4B6E;
+  --color-critical-dim: #6B1A2A;
+  --color-high: #FFA84A;
+  --color-high-dim: #6B4220;
+  --color-medium: #4FA8D8;
+  --color-medium-dim: #1F4862;
+  --color-low: #6B7280;
+  --color-low-dim: #2A2F38;
+
+  /* Trajectory */
+  --color-improving: #4ECCA3;
+  --color-stable: #6B7280;
+  --color-deteriorating: #FF4B6E;
+  --color-volatile: #FFA84A;
+
+  /* Type */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+body {
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+
+/* Scrollbars — terminal style */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-4);
+  border: 2px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-line-strong); }
+
+::selection { background: var(--color-accent); color: var(--color-bg); }
+
+:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  animation: pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.caret {
+  display: inline-block;
+  width: 7px; height: 14px;
+  background: var(--color-accent);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+.text-display {
+  font-family: var(--font-display), serif;
+  letter-spacing: -0.015em;
+}
+
+.row-hover { transition: background-color 80ms ease-out; }
+.row-hover:hover { background: var(--color-bg-2); }
+
+/* Subtle scan-line effect for the terminal frame */
+.scanline {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--color-accent-glow) 50%,
+    transparent 100%
+  );
+}

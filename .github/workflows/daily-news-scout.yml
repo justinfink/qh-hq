@@ -1,0 +1,24 @@
+name: Daily News Scout
+
+on:
+  schedule:
+    # Hourly during US business hours (PT)
+    - cron: "0 13-22 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger news_scout agent
+        run: |
+          curl -X POST "${{ secrets.QH_HQ_BACKEND_URL }}/api/agents/news_scout/run" \
+            -H "Content-Type: application/json" \
+            --fail
+      - name: Wait for ingestion
+        run: sleep 90
+      - name: Trigger implication_mapper agent
+        run: |
+          curl -X POST "${{ secrets.QH_HQ_BACKEND_URL }}/api/agents/implication_mapper/run" \
+            -H "Content-Type: application/json" \
+            --fail
