@@ -31,16 +31,31 @@ export default function AgentRail() {
     return () => clearInterval(int);
   }, [refresh]);
 
-  // SSE subscription to live trace events
+  // SSE subscription to live trace events.
+  // Vercel serverless can't hold open connections, so we close on first
+  // "info" message to avoid an infinite reconnect loop.
   useEffect(() => {
     let es: EventSource | null = null;
+    let reconnectAttempts = 0;
     try {
       es = new EventSource(`${API_BASE_URL}/api/agents/stream`);
       es.onopen = () => setConnected(true);
-      es.onerror = () => setConnected(false);
+      es.onerror = () => {
+        setConnected(false);
+        reconnectAttempts++;
+        if (reconnectAttempts >= 2) {
+          es?.close();  // Stop the EventSource auto-reconnect storm
+          es = null;
+        }
+      };
       es.onmessage = (e) => {
         try {
-          const data = JSON.parse(e.data) as AgentTraceEvent;
+          const data = JSON.parse(e.data);
+          if (data.type === "info") {
+            // Serverless mode acknowledgement — no live stream available
+            es?.close();
+            return;
+          }
           if (data.type !== "agent_trace") return;
           setTrace((prev) => {
             const next = [{

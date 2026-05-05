@@ -1,7 +1,9 @@
 import asyncio
+import json
+from typing import AsyncIterator
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from sse_starlette.sse import EventSourceResponse
+from fastapi.responses import StreamingResponse
 
 from app.agents.registry import all_agents, get_agent
 from app.db.client import get_supabase
@@ -12,11 +14,9 @@ router = APIRouter()
 
 @router.get("")
 async def list_agents():
-    """Registry view + last-run status for each agent."""
     sb = get_supabase()
     db_rows = sb.table("agents").select("*").execute().data
     by_slug = {r["slug"]: r for r in db_rows}
-
     out = []
     for a in all_agents():
         db = by_slug.get(a.slug, {})
@@ -62,13 +62,19 @@ async def run_agent(slug: str, background: BackgroundTasks):
         agent = get_agent(slug)
     except KeyError:
         raise HTTPException(404, f"unknown agent: {slug}")
-
-    # Fire and forget; client subscribes to /stream for traces
     background.add_task(agent.execute, "manual")
     return {"status": "started", "agent": slug}
 
 
 @router.get("/stream")
 async def stream():
-    """SSE endpoint pushing trace events from any active agent run."""
-    return EventSourceResponse(bus.stream())
+    """SSE endpoint pushing trace events. Falls back to a polite no-op stream
+    when sse-starlette isn't installed (e.g. Vercel serverless)."""
+    try:
+        from sse_starlette.sse import EventSourceResponse  # type: ignore
+        return EventSourceResponse(bus.stream())
+    except ImportError:
+        async def _noop() -> AsyncIterator[bytes]:
+            yield b'data: {"type":"info","message":"SSE not available in this environment; agent runs are persisted to DB"}\n\n'
+
+        return StreamingResponse(_noop(), media_type="text/event-stream")

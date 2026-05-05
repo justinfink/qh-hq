@@ -9,8 +9,14 @@ interface SearchHit {
   id: string;
   title?: string;
   name?: string;
-  similarity: number;
+  similarity: number | string | null;
   [k: string]: unknown;
+}
+
+function safeSim(s: number | string | null | undefined): number {
+  if (s == null) return 0;
+  const n = typeof s === "number" ? s : parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
 }
 
 interface SearchResults {
@@ -134,20 +140,23 @@ function SearchSection({
         {title}
       </div>
       <div className="space-y-1">
-        {hits.map((h) => (
-          <div key={h.id} className="flex items-start gap-3 py-1">
-            <span className={cn(
-              "font-mono text-[10px] tabular w-12 shrink-0 pt-0.5",
-              h.similarity > 0.7 ? "text-[var(--color-accent)]" :
-              h.similarity > 0.5 ? "text-[var(--color-fg-3)]" : "text-[var(--color-fg-5)]"
-            )}>
-              {(h.similarity * 100).toFixed(0)}%
-            </span>
-            <span className="text-[12px] text-[var(--color-fg-2)] leading-snug flex-1">
-              {render(h)}
-            </span>
-          </div>
-        ))}
+        {hits.map((h) => {
+          const sim = safeSim(h.similarity);
+          return (
+            <div key={h.id} className="flex items-start gap-3 py-1">
+              <span className={cn(
+                "font-mono text-[10px] tabular w-12 shrink-0 pt-0.5",
+                sim > 0.7 ? "text-[var(--color-accent)]" :
+                sim > 0.5 ? "text-[var(--color-fg-3)]" : "text-[var(--color-fg-5)]"
+              )}>
+                {sim > 0 ? `${(sim * 100).toFixed(0)}%` : "—"}
+              </span>
+              <span className="text-[12px] text-[var(--color-fg-2)] leading-snug flex-1">
+                {render(h)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
