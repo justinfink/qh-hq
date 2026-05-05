@@ -72,9 +72,26 @@ export default function AgentRail() {
     return () => { es?.close(); };
   }, []);
 
+  const [running, setRunning] = useState<Record<string, "running" | "success" | "error" | undefined>>({});
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const trigger = useCallback(async (slug: string) => {
-    try { await api.triggerAgent(slug); }
-    catch {/* show inline error in real impl */}
+    setRunning((r) => ({ ...r, [slug]: "running" }));
+    setErrorMsg(null);
+    try {
+      await api.triggerAgent(slug);
+      // Trace events should arrive via SSE; the run itself is async on the backend.
+      // Refresh runs after a short delay to pick up the persisted result.
+      setTimeout(() => {
+        api.runs(15).then((r) => setRuns(r.runs)).catch(() => {});
+        setRunning((r) => ({ ...r, [slug]: "success" }));
+        setTimeout(() => setRunning((r) => ({ ...r, [slug]: undefined })), 2000);
+      }, 4000);
+    } catch (err) {
+      setRunning((r) => ({ ...r, [slug]: "error" }));
+      setErrorMsg(`Run failed: ${(err as Error).message}. Check ANTHROPIC_API_KEY in backend env.`);
+      setTimeout(() => setRunning((r) => ({ ...r, [slug]: undefined })), 4000);
+    }
   }, []);
 
   return (
@@ -92,22 +109,33 @@ export default function AgentRail() {
             {connected ? "● stream live" : "○ stream off"}
           </span>
         </div>
-        {agents.map((a) => (
+        {agents.map((a) => {
+          const state = running[a.slug];
+          return (
           <div key={a.slug} className="px-3 py-2 bt border-[var(--color-line)] row-hover">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[12px] text-[var(--color-fg)]">{a.name}</span>
               <button
                 onClick={() => trigger(a.slug)}
-                className="font-mono text-[10px] text-[var(--color-accent)] hover:text-[var(--color-fg)] cursor-pointer"
+                disabled={state === "running"}
+                className={cn(
+                  "font-mono text-[10px] cursor-pointer transition-colors disabled:cursor-wait",
+                  state === "running" ? "text-[var(--color-fg-4)]" :
+                  state === "error" ? "text-[#FF4B6E]" :
+                  state === "success" ? "text-[var(--color-accent)]" :
+                  "text-[var(--color-accent)] hover:text-[var(--color-fg)]"
+                )}
                 title="Trigger run"
               >
-                ▶ run
+                {state === "running" ? "⏵ running…" :
+                 state === "error" ? "✕ failed" :
+                 state === "success" ? "✓ queued" : "▶ run"}
               </button>
             </div>
             <div className="text-[10px] font-mono text-[var(--color-fg-4)] mb-1">
               {a.role}
             </div>
-            <div className="flex items-center gap-3 font-mono text-[10px] text-[var(--color-fg-5)] tabular">
+            <div className="flex items-center gap-3 font-mono text-[10px] text-[var(--color-fg-5)] tabular " data-marker="agent-meta-row">
               <span>{a.model.split("-").slice(0, 3).join("-")}</span>
               <span>{a.last_run_at ? timeAgo(a.last_run_at) : "never run"}</span>
               {a.last_run_status && (
@@ -120,7 +148,13 @@ export default function AgentRail() {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
+        {errorMsg && (
+          <div className="px-3 py-2 border-t border-[#FF4B6E]/30 bg-[#FF4B6E]/10">
+            <p className="font-mono text-[10px] text-[#FF4B6E] leading-relaxed">{errorMsg}</p>
+          </div>
+        )}
       </div>
 
       {/* Live trace */}
