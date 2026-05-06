@@ -57,21 +57,24 @@ async def list_signals(
 
 @router.get("/feed")
 async def feed(
-    limit: int = Query(default=25, ge=1, le=100),
+    limit: int = Query(default=200, ge=1, le=500),
 ):
-    """Curated feed for the front-page terminal: signals with at least one implication, \
-    ordered by severity then recency."""
+    """Front-page feed: signals with at least one implication.
+
+    Returned ordered by severity (critical first) then created_at desc within each tier.
+    Frontend can re-sort to "newest first" client-side without re-fetching.
+    """
     sb = get_supabase()
 
-    # Pull recent implications joined to signals
     impls = sb.table("implications").select(
         "id,severity,confidence_score,headline,reasoning,recommended_action,recommended_owner,recommended_by_date,initiative_id,customer_org_id,status,created_at,"
         "signal:signals(id,signal_kind,title,summary,source_name,source_url,detected_at,occurred_at,primary_organization_id)"
-    ).eq("status", "open").order("created_at", desc=True).limit(limit * 2).execute().data
+    ).eq("status", "open").order("created_at", desc=True).limit(limit).execute().data
 
     sev_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "fyi": 4}
-    impls.sort(key=lambda i: (sev_order.get(i.get("severity", "medium"), 2), i.get("created_at") or ""))
-    impls = impls[:limit]
+    # Stable sort: secondary key first (created_at desc), then primary (severity asc)
+    impls.sort(key=lambda i: i.get("created_at") or "", reverse=True)
+    impls.sort(key=lambda i: sev_order.get(i.get("severity", "medium"), 2))
 
     org_ids = {i["signal"]["primary_organization_id"] for i in impls if i["signal"] and i["signal"].get("primary_organization_id")}
     org_map: dict[str, dict] = {}

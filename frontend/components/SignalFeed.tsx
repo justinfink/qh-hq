@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import type { FeedItem } from "@/lib/types";
+import type { FeedItem, Initiative, Organization } from "@/lib/types";
 import { SEVERITY_COLOR, timeAgo, cn } from "@/lib/format";
 
 const SEVERITY_ORDER: Array<FeedItem["severity"]> = ["critical", "high", "medium", "low", "fyi"];
+type SortMode = "severity" | "newest";
+const SEV_RANK: Record<FeedItem["severity"], number> = {
+  critical: 0, high: 1, medium: 2, low: 3, fyi: 4,
+};
 
 export default function SignalFeed({
   selectedId,
@@ -19,8 +23,14 @@ export default function SignalFeed({
   onFilterChange: (f: FeedItem["severity"] | "all") => void;
 }) {
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [initiatives, setInitiatives] = useState<Initiative[]>([]);
+  const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  const [sortMode, setSortMode] = useState<SortMode>("severity");
+  const [initiativeFilter, setInitiativeFilter] = useState<string>("all");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const refresh = useCallback(() => {
     api.feed()
@@ -35,53 +45,162 @@ export default function SignalFeed({
     return () => clearInterval(int);
   }, [refresh, refreshTick]);
 
-  const filtered = filter === "all" ? items : items.filter((i) => i.severity === filter);
+  // Load filter dropdown sources once
+  useEffect(() => {
+    api.initiatives().then((r) => setInitiatives(r.initiatives)).catch(() => {});
+    api.organizations().then((r) => setOrgs(r.organizations)).catch(() => {});
+  }, []);
+
+  // Apply filters then sort
+  const filtered = useMemo(() => {
+    let out = items;
+    if (filter !== "all") out = out.filter((i) => i.severity === filter);
+    if (initiativeFilter !== "all") out = out.filter((i) => i.initiative?.id === initiativeFilter);
+    if (orgFilter !== "all") out = out.filter((i) => i.primary_organization?.id === orgFilter);
+
+    if (sortMode === "newest") {
+      out = [...out].sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+    } else {
+      out = [...out].sort((a, b) => {
+        const sevDiff = SEV_RANK[a.severity] - SEV_RANK[b.severity];
+        if (sevDiff !== 0) return sevDiff;
+        return (b.created_at || "").localeCompare(a.created_at || "");
+      });
+    }
+    return out;
+  }, [items, filter, initiativeFilter, orgFilter, sortMode]);
 
   const counts: Record<string, number> = { all: items.length };
   for (const s of SEVERITY_ORDER) counts[s] = items.filter((i) => i.severity === s).length;
 
+  // Initiatives that actually have items in the current feed (severity filter applied)
+  const visibleInitiativeIds = useMemo(() => {
+    const base = filter === "all" ? items : items.filter((i) => i.severity === filter);
+    return new Set(base.map((i) => i.initiative?.id).filter(Boolean) as string[]);
+  }, [items, filter]);
+  const visibleOrgIds = useMemo(() => {
+    const base = filter === "all" ? items : items.filter((i) => i.severity === filter);
+    return new Set(base.map((i) => i.primary_organization?.id).filter(Boolean) as string[]);
+  }, [items, filter]);
+
+  const selectClass =
+    "bg-[var(--color-bg-1)] border border-[var(--color-line)] text-[var(--color-fg-2)] " +
+    "font-mono text-[10px] px-1.5 py-0.5 cursor-pointer uppercase tracking-wider focus:outline-none " +
+    "focus:border-[var(--color-accent)]";
+
   return (
     <div className="h-full flex flex-col">
-      <div className="bb px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] text-[var(--color-fg-3)] uppercase tracking-widest">
+      {/* Top row: title + sort + dropdowns + refresh */}
+      <div className="bb px-4 py-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="font-mono text-[10px] text-[var(--color-fg-3)] uppercase tracking-widest shrink-0">
             Signal Feed
           </span>
-          <span className="font-mono text-[10px] text-[var(--color-fg-5)]">
-            agent-surfaced · ranked by QH-implication severity
+          <span className="font-mono text-[10px] text-[var(--color-fg-5)] truncate">
+            agent-surfaced · {sortMode === "severity" ? "ranked by severity, then recency" : "newest first"}
           </span>
         </div>
-        <div className="flex items-center gap-1 font-mono text-[10px]">
-          {(["all", ...SEVERITY_ORDER] as const).map((s) => (
+        <div className="flex items-center gap-2 font-mono text-[10px] shrink-0">
+          {/* Sort toggle */}
+          <div className="flex items-center bl br border-[var(--color-line)] overflow-hidden">
             <button
-              key={s}
-              onClick={() => onFilterChange(s)}
+              onClick={() => setSortMode("severity")}
               className={cn(
                 "px-2 py-0.5 cursor-pointer uppercase tracking-wider",
-                filter === s ? "text-[var(--color-fg)] bg-[var(--color-bg-2)]" : "text-[var(--color-fg-4)] hover:text-[var(--color-fg-2)]"
+                sortMode === "severity"
+                  ? "text-[var(--color-fg)] bg-[var(--color-bg-2)]"
+                  : "text-[var(--color-fg-4)] hover:text-[var(--color-fg-2)]"
               )}
             >
-              {s} <span className="tabular text-[var(--color-fg-5)]">{counts[s] ?? 0}</span>
+              severity
             </button>
-          ))}
+            <button
+              onClick={() => setSortMode("newest")}
+              className={cn(
+                "px-2 py-0.5 cursor-pointer uppercase tracking-wider bl border-[var(--color-line)]",
+                sortMode === "newest"
+                  ? "text-[var(--color-fg)] bg-[var(--color-bg-2)]"
+                  : "text-[var(--color-fg-4)] hover:text-[var(--color-fg-2)]"
+              )}
+            >
+              newest
+            </button>
+          </div>
+
+          {/* Initiative filter */}
+          <select
+            value={initiativeFilter}
+            onChange={(e) => setInitiativeFilter(e.target.value)}
+            className={selectClass}
+            title="Filter by initiative"
+          >
+            <option value="all">init: all</option>
+            {initiatives
+              .filter((i) => visibleInitiativeIds.has(i.id))
+              .map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.code || i.name}
+                </option>
+              ))}
+          </select>
+
+          {/* Org filter */}
+          <select
+            value={orgFilter}
+            onChange={(e) => setOrgFilter(e.target.value)}
+            className={selectClass}
+            title="Filter by organization"
+          >
+            <option value="all">org: all</option>
+            {orgs
+              .filter((o) => visibleOrgIds.has(o.id))
+              .map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.short_name || o.name}
+                </option>
+              ))}
+          </select>
+
           <button
             onClick={() => setRefreshTick((t) => t + 1)}
-            className="ml-2 px-2 py-0.5 text-[var(--color-fg-4)] hover:text-[var(--color-accent)] cursor-pointer"
+            className="px-2 py-0.5 text-[var(--color-fg-4)] hover:text-[var(--color-accent)] cursor-pointer"
+            title="Refresh"
           >
             ↻
           </button>
         </div>
       </div>
 
+      {/* Severity row */}
+      <div className="bb px-4 py-1.5 flex items-center gap-1 font-mono text-[10px]">
+        {(["all", ...SEVERITY_ORDER] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => onFilterChange(s)}
+            className={cn(
+              "px-2 py-0.5 cursor-pointer uppercase tracking-wider",
+              filter === s
+                ? "text-[var(--color-fg)] bg-[var(--color-bg-2)]"
+                : "text-[var(--color-fg-4)] hover:text-[var(--color-fg-2)]"
+            )}
+          >
+            {s} <span className="tabular text-[var(--color-fg-5)]">{counts[s] ?? 0}</span>
+          </button>
+        ))}
+        <span className="ml-auto text-[var(--color-fg-5)]">
+          showing {filtered.length} of {items.length}
+        </span>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {loading && (
           <div className="px-4 py-6 text-[var(--color-fg-5)] text-[11px] font-mono">
-            Connecting to backend… ensure FastAPI is running on :8000
+            Loading feed…
           </div>
         )}
         {!loading && filtered.length === 0 && (
           <div className="px-4 py-6 text-[var(--color-fg-5)] text-[11px] font-mono">
-            No signals at this severity. Run news_scout + implication_mapper to ingest.
+            No items match these filters. Try widening severity or clearing the initiative/org filter.
           </div>
         )}
         {filtered.map((item) => {
