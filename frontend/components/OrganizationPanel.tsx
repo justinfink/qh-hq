@@ -2,14 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { Organization, Trajectory } from "@/lib/types";
+import type { Contact, Organization, Trajectory } from "@/lib/types";
 import { TRAJECTORY_COLOR, TRAJECTORY_GLYPH, relStrengthBar, timeAgo, cn } from "@/lib/format";
 import { ExternalLink } from "lucide-react";
 
 interface OrgFull extends Organization {
-  contacts?: Array<{ id: string; name: string; title?: string; role_category?: string; notes?: string }>;
+  contacts?: Contact[];
   deployments?: Array<unknown>;
   recent_implications?: Array<{ id: string; severity: string; headline: string; created_at: string }>;
+}
+
+const EXEC_ROLE_ORDER: Record<string, number> = {
+  ceo: 0,
+  cfo: 1,
+  cio: 2,
+  cto: 3,
+  caio: 4,
+  cdo: 5,
+  cdto: 6,
+  cmo: 7,
+  coo: 8,
+  innovation: 9,
+};
+
+function sortContacts(contacts: Contact[] = []) {
+  return [...contacts].sort((a, b) => {
+    const ar = EXEC_ROLE_ORDER[a.role_category ?? ""] ?? 50;
+    const br = EXEC_ROLE_ORDER[b.role_category ?? ""] ?? 50;
+    if (ar !== br) return ar - br;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export default function OrganizationPanel({ orgId }: { orgId: string | null }) {
@@ -46,6 +68,8 @@ export default function OrganizationPanel({ orgId }: { orgId: string | null }) {
 
   const dyn = org.metadata?.dynamics;
   const traj = (dyn?.trajectory ?? "stable") as Trajectory;
+  const contacts = sortContacts(org.contacts);
+  const isProspect = org.relationship === "prospect";
 
   return (
     <div className="h-full overflow-y-auto">
@@ -80,6 +104,41 @@ export default function OrganizationPanel({ orgId }: { orgId: string | null }) {
           <p className="mt-4 text-[12px] text-[var(--color-fg-2)] leading-relaxed">
             {org.description}
           </p>
+        )}
+
+        {isProspect && (
+          <section className="mt-5 border border-[#4FA8D8]/40 bg-[#4FA8D8]/5">
+            <div className="px-3 py-2 bb flex items-center justify-between gap-3">
+              <span className="font-mono text-[10px] text-[#4FA8D8] uppercase tracking-widest">
+                Prospect GTM motion
+              </span>
+              <span className="font-mono text-[10px] text-[var(--color-fg-5)] uppercase">
+                signal survey
+              </span>
+            </div>
+            <div className="px-3 py-2 space-y-2">
+              {org.metadata?.gtm_motion && (
+                <p className="text-[12px] text-[var(--color-fg-2)] leading-relaxed">{org.metadata.gtm_motion}</p>
+              )}
+              {org.metadata?.survey_reason && (
+                <p className="text-[11px] text-[var(--color-fg-4)] leading-snug">{org.metadata.survey_reason}</p>
+              )}
+              {org.metadata?.similar_to && org.metadata.similar_to.length > 0 && (
+                <div className="font-mono text-[10px] text-[var(--color-fg-4)]">
+                  similar to: <span className="text-[var(--color-fg-2)]">{org.metadata.similar_to.join(", ")}</span>
+                </div>
+              )}
+              {org.metadata?.signal_triggers && org.metadata.signal_triggers.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {org.metadata.signal_triggers.map((trigger) => (
+                    <span key={trigger} className="border border-[#4FA8D8]/30 px-1.5 py-0.5 font-mono text-[9px] text-[#4FA8D8] uppercase">
+                      {trigger}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
         {/* Dynamics block */}
@@ -188,13 +247,20 @@ export default function OrganizationPanel({ orgId }: { orgId: string | null }) {
         {org.contacts && org.contacts.length > 0 && (
           <section className="mt-5">
             <div className="font-mono text-[10px] text-[var(--color-fg-3)] uppercase tracking-widest mb-2">
-              Named contacts · {org.contacts.length}
+              Executive map · {contacts.length}
             </div>
             <div className="space-y-2">
-              {org.contacts.map((c) => (
+              {contacts.map((c) => (
                 <div key={c.id} className="border border-[var(--color-line)] px-3 py-2">
-                  <div className="text-[12px] text-[var(--color-fg)]">{c.name}</div>
-                  <div className="font-mono text-[10px] text-[var(--color-fg-4)] tabular mt-0.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-[12px] text-[var(--color-fg)]">{c.name}</div>
+                    {c.role_category && (
+                      <span className="font-mono text-[9px] text-[var(--color-accent)] uppercase tabular">
+                        {c.role_category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-[10px] text-[var(--color-fg-4)] leading-snug mt-0.5">
                     {c.title}
                   </div>
                   {c.notes && (

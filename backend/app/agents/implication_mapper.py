@@ -2,7 +2,7 @@
 
 For each signal, the agent:
   1. Retrieves the most semantically relevant initiatives (via pgvector)
-  2. Retrieves the most semantically relevant customers (via pgvector)
+  2. Retrieves the most semantically relevant tracked accounts (customers, pilots, prospects, partners)
   3. Asks Opus to reason about implication for QH
   4. Persists structured implications with severity + recommended action
 """
@@ -35,7 +35,8 @@ direct (OpenAI Healthcare, Anthropic Claude for Healthcare)
 - New business lines being explored: ASC vertical, Pharma/Life-Sciences governance, Payer-side AI \
 audit (CMMI WISeR-anchored), Governed Model Marketplace for 3rd-party vendors, Specialty practice MSOs
 
-Given a fresh external signal and the most relevant QH initiatives + customer accounts (provided), \
+Given a fresh external signal and the most relevant QH initiatives + tracked accounts (customers, \
+pilots, prospects, partners) provided, \
 write the implication for QH. Be specific. Name people and dollars when present. Avoid generic \
 hedging. If the signal has no real implication, say so explicitly with severity=fyi.
 
@@ -47,7 +48,7 @@ or customer if applicable.>",
   "severity": "critical|high|medium|low|fyi",
   "confidence_score": <0.0-1.0>,
   "best_initiative_id": "<uuid or null>",
-  "best_customer_org_id": "<uuid or null>",
+  "best_customer_org_id": "<uuid for customer/pilot/prospect/partner account or null>",
   "recommended_action": "<one concrete next step. Include owner role + timing.>",
   "recommended_owner": "<role e.g. 'Head of Office of CEO' or null>",
   "recommended_by_date": "<YYYY-MM-DD or null>"
@@ -68,11 +69,11 @@ class ImplicationMapper(Agent):
     slug = "implication_mapper"
     name = "Implication Mapper"
     role = "Reasons signals into QH-specific implications"
-    description = "For each new signal, retrieves relevant initiatives + customers, drafts an exec implication."
+    description = "For each new signal, retrieves relevant initiatives + tracked accounts, drafts an exec implication."
     model = "claude-opus-4-7"
 
     K_INITIATIVES = 3
-    K_CUSTOMERS = 4
+    K_ACCOUNTS = 4
     MAX_SIGNALS_PER_RUN = 3  # serverless 30s budget; ~7s per Opus call
 
     async def run(self, ctx: RunContext, signal_id: str | None = None, **kwargs: Any) -> dict[str, Any]:
@@ -118,12 +119,12 @@ class ImplicationMapper(Agent):
         if not emb:
             emb = await embed_text(f"{sig['title']}\n\n{sig.get('summary') or ''}")
 
-        # Retrieve top-k initiatives + customers via pgvector
+        # Retrieve top-k initiatives + tracked accounts via pgvector
         initiatives = await self._knn_initiatives(emb, self.K_INITIATIVES)
-        customers = await self._knn_customers(emb, self.K_CUSTOMERS)
-        ctx.emit("tool_result", f"Retrieved {len(initiatives)} initiatives, {len(customers)} customers",
+        accounts = await self._knn_accounts(emb, self.K_ACCOUNTS)
+        ctx.emit("tool_result", f"Retrieved {len(initiatives)} initiatives, {len(accounts)} tracked accounts",
                  initiative_ids=[i["id"] for i in initiatives],
-                 customer_ids=[c["id"] for c in customers])
+                 account_ids=[c["id"] for c in accounts])
 
         # Compose user message
         user_msg = json.dumps({
@@ -138,9 +139,16 @@ class ImplicationMapper(Agent):
                 {"id": i["id"], "name": i["name"], "thesis": i.get("thesis"), "stage": i.get("stage")}
                 for i in initiatives
             ],
-            "candidate_customers": [
-                {"id": c["id"], "name": c["name"], "org_type": c.get("org_type"), "relationship": c.get("relationship")}
-                for c in customers
+            "candidate_accounts": [
+                {
+                    "id": c["id"],
+                    "name": c["name"],
+                    "org_type": c.get("org_type"),
+                    "relationship": c.get("relationship"),
+                    "gtm_motion": (c.get("metadata") or {}).get("gtm_motion"),
+                    "survey_reason": (c.get("metadata") or {}).get("survey_reason"),
+                }
+                for c in accounts
             ],
         }, default=str)
 
@@ -184,7 +192,7 @@ class ImplicationMapper(Agent):
         rpc = sb.rpc("match_initiatives", {"query_embedding": embedding, "match_count": k}).execute()
         return rpc.data or []
 
-    async def _knn_customers(self, embedding: list[float], k: int) -> list[dict]:
+    async def _knn_accounts(self, embedding: list[float], k: int) -> list[dict]:
         sb = get_supabase()
         rpc = sb.rpc("match_organizations", {"query_embedding": embedding, "match_count": k}).execute()
         return rpc.data or []

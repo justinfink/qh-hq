@@ -237,6 +237,138 @@ PROSPECTS: list[dict] = [
     },
 ]
 
+# Additional V0.2 prospects: selected for similarity to QH's existing customer base
+# (large academic/public/Catholic/mission-driven systems, active AI leadership, or
+# multi-EHR complexity) plus explicit GTM trigger monitoring.
+PROSPECTS.extend([
+    {
+        "name": "Hackensack Meridian Health",
+        "short_name": "Hackensack",
+        "org_type": "idn",
+        "relationship": "prospect",
+        "hq_city": "Edison", "hq_state": "NJ", "region": "Northeast",
+        "size_label": "18 hospitals, New Jersey flagship IDN",
+        "size_metric": "hospitals", "size_value": 18,
+        "description": (
+            "Tier-1 Northeast IDN with a new digital/information leadership window. Similar "
+            "to Jefferson/NYC H+H in academic-public-market complexity and attractive for "
+            "multi-vendor governance positioning."
+        ),
+        "homepage_url": "https://www.hackensackmeridianhealth.org",
+        "metadata": {
+            "survey_reason": "Leadership-change GTM window; similar Northeast complexity to Jefferson and NYC H+H.",
+            "similar_to": ["Jefferson Health", "NYC Health + Hospitals"],
+            "gtm_motion": "CDIO-led multi-vendor governance discovery",
+            "signal_triggers": ["CDIO roadmap updates", "AI governance hiring", "Epic Factory commentary"],
+        },
+    },
+    {
+        "name": "AdventHealth",
+        "short_name": "AdventHealth",
+        "org_type": "idn",
+        "relationship": "prospect",
+        "hq_city": "Altamonte Springs", "hq_state": "FL", "region": "Southeast",
+        "size_label": "50+ hospitals, faith-based national system",
+        "size_metric": "hospitals", "size_value": 50,
+        "description": (
+            "Mission-driven system with a first Chief AI Officer signal. Similar to Mercy "
+            "and CommonSpirit for values-based enterprise transformation, with RCM and "
+            "workflow automation as the likely CFO-friendly entry."
+        ),
+        "homepage_url": "https://www.adventhealth.com",
+        "metadata": {
+            "survey_reason": "New CAIO plus faith-based system similarity to Mercy/CommonSpirit.",
+            "similar_to": ["Mercy", "CommonSpirit Health"],
+            "gtm_motion": "CAIO plus CFO ROI motion around RCM and governed workflow automation",
+            "signal_triggers": ["CAIO talks", "AI center hiring", "finance transformation announcements"],
+        },
+    },
+    {
+        "name": "Advocate Health",
+        "short_name": "Advocate",
+        "org_type": "idn",
+        "relationship": "prospect",
+        "hq_city": "Charlotte", "hq_state": "NC", "region": "Southeast/Midwest",
+        "size_label": "69 hospitals, multi-state nonprofit system",
+        "size_metric": "hospitals", "size_value": 69,
+        "description": (
+            "Very large nonprofit IDN with ambient/patient-agent exposure through adjacent "
+            "vendors. Strong fit for QH's multi-vendor governance and executive AI portfolio "
+            "management thesis."
+        ),
+        "homepage_url": "https://www.advocatehealth.org",
+        "metadata": {
+            "survey_reason": "Large nonprofit system with vendor sprawl risk and executive AI portfolio needs.",
+            "similar_to": ["Mercy", "Emory Healthcare"],
+            "gtm_motion": "CIO/CMIO portfolio-governance motion",
+            "signal_triggers": ["enterprise AI governance policy", "Hippocratic/Abridge deployment expansion"],
+        },
+    },
+    {
+        "name": "Mass General Brigham",
+        "short_name": "MGB",
+        "org_type": "amc",
+        "relationship": "prospect",
+        "hq_city": "Boston", "hq_state": "MA", "region": "Northeast",
+        "size_label": "Academic medical system, 12+ hospitals",
+        "size_metric": "hospitals", "size_value": 12,
+        "description": (
+            "AI-mature academic medical system with research and implementation depth. "
+            "Best fit for FDA-grade governance, shadow-AI inventory, and academic validation "
+            "of QH primitives."
+        ),
+        "homepage_url": "https://www.massgeneralbrigham.org",
+        "metadata": {
+            "survey_reason": "AI-mature AMC similar to UT/Emory, with research credibility for governance primitives.",
+            "similar_to": ["University of Texas System", "Emory Healthcare"],
+            "gtm_motion": "CMIO/CDIO governance-lab motion",
+            "signal_triggers": ["new AI trials", "AI governance publications", "vendor evaluation announcements"],
+        },
+    },
+    {
+        "name": "Providence",
+        "short_name": "Providence",
+        "org_type": "idn",
+        "relationship": "prospect",
+        "hq_city": "Renton", "hq_state": "WA", "region": "West",
+        "size_label": "50+ hospitals, multi-state nonprofit system",
+        "size_metric": "hospitals", "size_value": 50,
+        "description": (
+            "Large mission-driven system with active digital innovation history. Good "
+            "fit for cross-state compliance, workforce enablement, and multi-vendor AI "
+            "governance."
+        ),
+        "homepage_url": "https://www.providence.org",
+        "metadata": {
+            "survey_reason": "Large mission-driven system with digital innovation maturity.",
+            "similar_to": ["Mercy", "CommonSpirit Health"],
+            "gtm_motion": "CIO/CDO enterprise AI control-plane motion",
+            "signal_triggers": ["AI vendor partnerships", "state AI compliance moves", "digital workforce programs"],
+        },
+    },
+    {
+        "name": "Trinity Health",
+        "short_name": "Trinity",
+        "org_type": "idn",
+        "relationship": "prospect",
+        "hq_city": "Livonia", "hq_state": "MI", "region": "Multi-region",
+        "size_label": "90+ hospitals, Catholic nonprofit system",
+        "size_metric": "hospitals", "size_value": 90,
+        "description": (
+            "Large Catholic system with structural similarity to Mercy and CommonSpirit. "
+            "Attractive for a reference-driven GTM motion around mission, safety, and "
+            "enterprise operational relief."
+        ),
+        "homepage_url": "https://www.trinity-health.org",
+        "metadata": {
+            "survey_reason": "Catholic-system adjacency where Mercy can be a credibility bridge.",
+            "similar_to": ["Mercy", "CommonSpirit Health"],
+            "gtm_motion": "Mercy-reference executive sponsor motion",
+            "signal_triggers": ["system AI governance policy", "workflow automation investments", "CIO changes"],
+        },
+    },
+])
+
 
 # COMPETITORS / ADJACENT AI VENDORS
 COMPETITORS: list[dict] = [

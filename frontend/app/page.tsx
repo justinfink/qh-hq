@@ -84,7 +84,7 @@ export default function Terminal() {
 
       <footer className="bt px-4 py-1.5 flex items-center justify-between font-mono text-[10px] text-[var(--color-fg-5)] tabular">
         <div className="flex items-center gap-4">
-          <span>QH HQ TERMINAL · v0.1</span>
+          <span>QH HQ TERMINAL · v0.2</span>
           <span>built by{" "}
             <a href="https://justinryanventures.com" target="_blank" rel="noreferrer" className="text-[var(--color-fg-3)] hover:text-[var(--color-accent)]">
               Justin Fink

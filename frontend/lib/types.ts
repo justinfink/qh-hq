@@ -51,7 +51,24 @@ export interface Organization {
   size_value?: number | null;
   description?: string | null;
   homepage_url?: string | null;
-  metadata?: { dynamics?: RelationshipDynamics; [k: string]: unknown };
+  metadata?: {
+    dynamics?: RelationshipDynamics;
+    gtm_motion?: string;
+    survey_reason?: string;
+    similar_to?: string[];
+    signal_triggers?: string[];
+    [k: string]: unknown;
+  };
+}
+
+export interface Contact {
+  id: string;
+  organization_id?: string | null;
+  name: string;
+  title?: string | null;
+  role_category?: string | null;
+  linkedin_url?: string | null;
+  notes?: string | null;
 }
 
 export interface Workstream {

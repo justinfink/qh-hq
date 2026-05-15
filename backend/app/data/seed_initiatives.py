@@ -253,6 +253,397 @@ INITIATIVES: list[dict] = [
     },
 ]
 
+# V0.2 expands the initiative map toward the internal expectation of ~25 tracked
+# workstreams while preserving the existing initiatives table schema. Several
+# initiatives intentionally share the same orgs/signals; metadata gives the
+# semantic mapper enough texture without creating brittle 1:1 mappings.
+INITIATIVES.extend([
+    {
+        "code": "CORE-OPERATING-LAYER",
+        "name": "Enterprise AI Operating Layer",
+        "kind": "core_product",
+        "thesis": (
+            "The durable core: a governed AI operating layer across data integration, model "
+            "runtime, workflow orchestration, audit, and outcomes. This is the umbrella that "
+            "ties UT-style enterprise deployments to the broader customer/prospect map."
+        ),
+        "stage": "scaling",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Beau Norgeot (Chief AI Officer)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 8.0,
+        "spend_quarterly_usd": 1_800_000,
+        "target_revenue_year_one_usd": 18_000_000,
+        "target_design_partners": 6,
+        "current_design_partners": 5,
+        "top_blocker": "Keep product narrative crisp as NBLs multiply; platform should explain every vertical, not compete with them.",
+        "next_milestone": "V0.2 platform narrative refresh for CEO/CIO buyers",
+        "next_milestone_date": date(2026, 6, 7),
+        "metadata": {
+            "evidence": ["QH site platform positioning", "Series B deployment expansion plan"],
+            "mapped_relationships": ["customer", "pilot", "prospect"],
+        },
+    },
+    {
+        "code": "CORE-GOVERNANCE",
+        "name": "Governance, Audit & Traceability Fabric",
+        "kind": "core_product",
+        "thesis": (
+            "Canonical governance layer for clinical/admin AI: source attributes, audit logs, "
+            "policy controls, clinician oversight, and cross-walks to HTI-1, CMS, Joint "
+            "Commission, CHAI, and state AI requirements."
+        ),
+        "stage": "scaling",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Beau Norgeot (Chief AI Officer)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 5.0,
+        "spend_quarterly_usd": 900_000,
+        "target_revenue_year_one_usd": 10_000_000,
+        "target_design_partners": 5,
+        "current_design_partners": 4,
+        "top_blocker": "Need to separate durable federal primitives from state-law volatility in buyer messaging.",
+        "next_milestone": "Federal-durable control map",
+        "next_milestone_date": date(2026, 6, 1),
+        "metadata": {"evidence": ["HTI-1 DSI", "CMS WISeR", "DiMe toolkit"], "overlaps": ["STRAT-CHAI", "NBL-PAYER"]},
+    },
+    {
+        "code": "CORE-AGENT-BUILDER",
+        "name": "Clinical Agent Builder & Workflow Studio",
+        "kind": "core_product",
+        "thesis": (
+            "Governed agent/workflow builder for clinical and operational teams. Must stay "
+            "healthcare-native and multi-EHR enough to counter Epic Factory and Microsoft Foundry."
+        ),
+        "stage": "pilot",
+        "confidence": "medium",
+        "velocity": "accelerating",
+        "primary_owner": "Product leadership",
+        "exec_sponsor": "Beau Norgeot (Chief AI Officer)",
+        "fte_allocated": 4.0,
+        "spend_quarterly_usd": 750_000,
+        "target_revenue_year_one_usd": 6_000_000,
+        "target_design_partners": 4,
+        "current_design_partners": 2,
+        "top_blocker": "Need artifact quality and safety workflow to be clearly better than incumbent EHR/cloud builders.",
+        "next_milestone": "Builder safety review with UT and Jefferson",
+        "next_milestone_date": date(2026, 6, 21),
+        "metadata": {"competitive_overlap": ["Epic Factory", "Microsoft Foundry"], "source": "QH platform layer research"},
+    },
+    {
+        "code": "CORE-SOLUTION-LIBRARY",
+        "name": "Curated Solution Library",
+        "kind": "core_product",
+        "thesis": (
+            "Reusable library of governed clinical/admin AI workflows. This is the bridge "
+            "between custom FDE deployment and repeatable software margins."
+        ),
+        "stage": "pilot",
+        "confidence": "medium",
+        "velocity": "holding",
+        "primary_owner": "Product leadership",
+        "exec_sponsor": "Kedar Mate, MD (CMO)",
+        "fte_allocated": 2.5,
+        "spend_quarterly_usd": 450_000,
+        "target_revenue_year_one_usd": 3_000_000,
+        "target_design_partners": 5,
+        "current_design_partners": 2,
+        "top_blocker": "Avoid mixing vertical-specific workflows into one noisy catalog; taxonomy needs buyer-language discipline.",
+        "next_milestone": "Library taxonomy v1",
+        "next_milestone_date": date(2026, 6, 14),
+        "metadata": {"overlaps": ["NBL-RCM", "NBL-ASC", "NBL-SPECIALTY"], "mapped_signal_types": ["customer_win", "product_launch"]},
+    },
+    {
+        "code": "CORE-OUTCOMES",
+        "name": "Outcomes & Margin Tracking",
+        "kind": "core_product",
+        "thesis": (
+            "Track clinical, operational, and financial outcomes from AI workflows so CFOs "
+            "see sustained margin growth rather than innovation spend. UTMB's run-rate impact "
+            "is the prototype proof point."
+        ),
+        "stage": "scaling",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Office of CEO",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 2.0,
+        "spend_quarterly_usd": 300_000,
+        "target_revenue_year_one_usd": 8_000_000,
+        "target_design_partners": 6,
+        "current_design_partners": 3,
+        "top_blocker": "Need consistent ROI instrumentation across heterogeneous customer workflows.",
+        "next_milestone": "CFO-facing outcomes dashboard spec",
+        "next_milestone_date": date(2026, 5, 31),
+        "metadata": {"evidence": ["UTMB $15M run-rate impact", "QH margin-growth content"], "buyer_personas": ["cfo", "coo", "ceo"]},
+    },
+    {
+        "code": "CORE-WORKFORCE",
+        "name": "Workforce Enablement & AI Champions",
+        "kind": "core_product",
+        "thesis": (
+            "Enterprise AI adoption depends on training, governance literacy, and distributed "
+            "clinical/operational champions. This supports every deployment but should be "
+            "tracked separately from core platform engineering."
+        ),
+        "stage": "greenlight",
+        "confidence": "medium",
+        "velocity": "accelerating",
+        "primary_owner": "Customer Success",
+        "exec_sponsor": "Kedar Mate, MD (CMO)",
+        "fte_allocated": 2.0,
+        "spend_quarterly_usd": 250_000,
+        "target_revenue_year_one_usd": 2_000_000,
+        "target_design_partners": 4,
+        "current_design_partners": 1,
+        "top_blocker": "Must package enablement as deployment acceleration, not generic training.",
+        "next_milestone": "Champion playbook for UT and Mercy",
+        "next_milestone_date": date(2026, 6, 10),
+        "metadata": {"mapped_relationships": ["customer", "pilot"], "buyer_personas": ["coo", "cmo", "chief_learning_officer"]},
+    },
+    {
+        "code": "CORE-REALTIME-SEARCH",
+        "name": "HIPAA-Compliant Real-Time AI Search",
+        "kind": "core_product",
+        "thesis": (
+            "UTMB's first-of-kind HIPAA-compliant real-time AI web search should be tracked "
+            "as its own wedge: high executive salience, high governance risk, and clear "
+            "differentiation from generic enterprise search."
+        ),
+        "stage": "pilot",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Product leadership",
+        "exec_sponsor": "Beau Norgeot (Chief AI Officer)",
+        "fte_allocated": 2.0,
+        "spend_quarterly_usd": 350_000,
+        "target_revenue_year_one_usd": 3_000_000,
+        "target_design_partners": 3,
+        "current_design_partners": 1,
+        "top_blocker": "Need safety and source-provenance controls before scaling beyond UT.",
+        "next_milestone": "Search provenance eval readout",
+        "next_milestone_date": date(2026, 6, 18),
+        "metadata": {"evidence": ["UTMB real-time AI web search announcement"], "overlaps": ["CORE-GOVERNANCE"]},
+    },
+    {
+        "code": "CORE-EHR-DATA",
+        "name": "EHR & Unstructured Data Integration Layer",
+        "kind": "core_product",
+        "thesis": (
+            "The invisible but defensible layer: normalize EHR, claims, unstructured clinical, "
+            "policy, and workflow data so agents can act safely. Especially important for "
+            "multi-EHR prospects where Epic-only solutions fail."
+        ),
+        "stage": "scaling",
+        "confidence": "high",
+        "velocity": "holding",
+        "primary_owner": "Platform engineering",
+        "exec_sponsor": "Beau Norgeot (Chief AI Officer)",
+        "fte_allocated": 6.0,
+        "spend_quarterly_usd": 1_100_000,
+        "target_revenue_year_one_usd": 7_000_000,
+        "target_design_partners": 4,
+        "current_design_partners": 3,
+        "top_blocker": "Multi-EHR integration work is high-effort and can look like services unless reusable adapters are packaged.",
+        "next_milestone": "CommonSpirit/HCA adapter gap assessment",
+        "next_milestone_date": date(2026, 6, 28),
+        "metadata": {"mapped_prospects": ["CommonSpirit Health", "HCA Healthcare", "Providence"], "overlaps": ["STRAT-EPIC"]},
+    },
+    {
+        "code": "GTM-HEALTH-SYSTEM-EXPANSION",
+        "name": "Health-System Expansion Motion",
+        "kind": "strategic_project",
+        "thesis": (
+            "Convert named customer proof into repeatable expansion across similar systems: "
+            "academic AMCs, Catholic/mission-driven IDNs, public systems, and multi-EHR mega-IDNs."
+        ),
+        "stage": "greenlight",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Shantanu Phatakwala (CCO)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 1.5,
+        "spend_quarterly_usd": 250_000,
+        "target_revenue_year_one_usd": 12_000_000,
+        "target_design_partners": 10,
+        "current_design_partners": 6,
+        "top_blocker": "Need prospect segmentation tied to executive trigger signals, not a generic IDN target list.",
+        "next_milestone": "Prospect segmentation pack",
+        "next_milestone_date": date(2026, 5, 27),
+        "metadata": {"mapped_relationships": ["customer", "prospect"], "buyer_personas": ["ceo", "cfo", "cio", "caio"]},
+    },
+    {
+        "code": "GTM-CEO-CFO-MARGIN",
+        "name": "CEO/CFO Sustained Margin Narrative",
+        "kind": "strategic_project",
+        "thesis": (
+            "QH should not sell 'AI governance' alone to executives; sell sustained margin "
+            "growth, workforce relief, and safety. Governance is the substrate that makes the "
+            "economic story defensible."
+        ),
+        "stage": "greenlight",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Office of CEO",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 0.75,
+        "spend_quarterly_usd": 125_000,
+        "target_revenue_year_one_usd": 0,
+        "target_design_partners": 0,
+        "current_design_partners": 0,
+        "top_blocker": "ROI proof points are uneven across customers; do not overgeneralize UTMB economics.",
+        "next_milestone": "CEO/CFO board narrative memo",
+        "next_milestone_date": date(2026, 5, 24),
+        "metadata": {"buyer_personas": ["ceo", "cfo", "coo"], "evidence": ["QH margin-growth content", "UTMB run-rate impact"]},
+    },
+    {
+        "code": "GTM-PROSPECT-SURVEY",
+        "name": "Similarity-Based Prospect Signal Survey",
+        "kind": "internal_op",
+        "thesis": (
+            "Continuously survey potential customers that resemble existing/pilot customers. "
+            "Track executive changes, AI governance policies, vendor sprawl, budget unlocks, "
+            "and competitor deployments as GTM motion signals."
+        ),
+        "stage": "pilot",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Office of CEO",
+        "exec_sponsor": "Shantanu Phatakwala (CCO)",
+        "fte_allocated": 1.0,
+        "spend_quarterly_usd": 100_000,
+        "target_revenue_year_one_usd": 0,
+        "target_design_partners": 0,
+        "current_design_partners": 0,
+        "top_blocker": "Need CRM enrichment so contacts, signals, and outreach state stay synchronized.",
+        "next_milestone": "CRM data model handoff",
+        "next_milestone_date": date(2026, 6, 5),
+        "metadata": {"mapped_relationships": ["prospect"], "source": "Neal V0.2 feedback", "overlaps": ["STRAT-CRM-INTEGRATION"]},
+    },
+    {
+        "code": "PARTNER-ANTHROPIC",
+        "name": "Anthropic / Claude Healthcare Partnership",
+        "kind": "partnership",
+        "thesis": (
+            "Anthropic is both substrate and strategic channel. QH needs named healthcare "
+            "governance positioning around Claude deployments before Anthropic or Microsoft "
+            "captures the relationship directly."
+        ),
+        "stage": "scaling",
+        "confidence": "high",
+        "velocity": "holding",
+        "primary_owner": "Justin Norden (CEO)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 0.75,
+        "spend_quarterly_usd": 150_000,
+        "target_revenue_year_one_usd": 0,
+        "target_design_partners": 2,
+        "current_design_partners": 1,
+        "top_blocker": "Partner-channel alignment risk: Anthropic healthcare-direct and Foundry routes can bypass QH.",
+        "next_milestone": "Joint healthcare governance lane agreement",
+        "next_milestone_date": date(2026, 5, 18),
+        "metadata": {"mapped_organizations": ["Anthropic", "Microsoft Azure", "University of Texas System"], "overlaps": ["NBL-PHARMA", "NBL-MARKETPLACE"]},
+    },
+    {
+        "code": "PARTNER-AZURE",
+        "name": "Microsoft Azure Marketplace & Co-Sell",
+        "kind": "partnership",
+        "thesis": (
+            "Azure Marketplace listing creates a procurement shortcut and co-sell path, but "
+            "Microsoft Foundry/Dragon can become a bundled competitor. Track as a partner and "
+            "threat, not a simple channel."
+        ),
+        "stage": "discovery",
+        "confidence": "medium",
+        "velocity": "slipping",
+        "primary_owner": "Shantanu Phatakwala (CCO)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 0.5,
+        "spend_quarterly_usd": 75_000,
+        "target_revenue_year_one_usd": 2_000_000,
+        "target_design_partners": 2,
+        "current_design_partners": 0,
+        "top_blocker": "Need co-sell rules that make QH the healthcare governance layer rather than a SKU under Foundry.",
+        "next_milestone": "Azure co-sell qualification review",
+        "next_milestone_date": date(2026, 6, 20),
+        "metadata": {"mapped_organizations": ["Microsoft Azure", "Anthropic"], "competitive_overlap": ["Microsoft Foundry", "Dragon Copilot"]},
+    },
+    {
+        "code": "STRAT-FEDERAL-DURABLE-COMPLIANCE",
+        "name": "Federal-Durable Compliance Positioning",
+        "kind": "strategic_project",
+        "thesis": (
+            "If state AI law preemption accelerates, QH must still win on HTI-1, CMS, CHAI, "
+            "Joint Commission, auditability, and local policy controls. This initiative keeps "
+            "the compliance thesis robust across political regimes."
+        ),
+        "stage": "greenlight",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Beau Norgeot (Chief AI Officer)",
+        "exec_sponsor": "Justin Norden (CEO)",
+        "fte_allocated": 1.0,
+        "spend_quarterly_usd": 175_000,
+        "target_revenue_year_one_usd": 0,
+        "target_design_partners": 0,
+        "current_design_partners": 0,
+        "top_blocker": "Regulatory uncertainty can either sharpen or blur the sales message.",
+        "next_milestone": "State-preemption response memo",
+        "next_milestone_date": date(2026, 5, 29),
+        "metadata": {"mapped_organizations": ["Centers for Medicare & Medicaid Services", "Office of the National Coordinator for Health IT", "Coalition for Health AI"]},
+    },
+    {
+        "code": "STRAT-SHADOW-AI-INVENTORY",
+        "name": "Shadow-AI Inventory & Risk Heatmap",
+        "kind": "strategic_project",
+        "thesis": (
+            "OpenEvidence, ambient scribes, clinician-owned tools, and vendor pilots create "
+            "unmanaged AI use that CIOs cannot see. Inventory plus risk heatmap is a concrete "
+            "executive wedge for prospects."
+        ),
+        "stage": "pilot",
+        "confidence": "high",
+        "velocity": "accelerating",
+        "primary_owner": "Beau Norgeot (Chief AI Officer)",
+        "exec_sponsor": "Kedar Mate, MD (CMO)",
+        "fte_allocated": 1.5,
+        "spend_quarterly_usd": 225_000,
+        "target_revenue_year_one_usd": 3_000_000,
+        "target_design_partners": 3,
+        "current_design_partners": 1,
+        "top_blocker": "Need a clean discovery workflow that does not feel like a punitive audit to clinicians.",
+        "next_milestone": "OpenEvidence shadow-AI demo",
+        "next_milestone_date": date(2026, 6, 3),
+        "metadata": {"mapped_organizations": ["OpenEvidence", "Cleveland Clinic", "CommonSpirit Health"], "overlaps": ["STRAT-EPIC", "CORE-GOVERNANCE"]},
+    },
+    {
+        "code": "STRAT-CRM-INTEGRATION",
+        "name": "CRM Integration for Accounts, Contacts & Signals",
+        "kind": "internal_op",
+        "thesis": (
+            "V0.2 stores executives in the contacts table; mid-term, CRM should be the system "
+            "of record for account owner, outreach stage, buying committee, and signal-to-action "
+            "state while QH HQ remains the reasoning layer."
+        ),
+        "stage": "discovery",
+        "confidence": "high",
+        "velocity": "holding",
+        "primary_owner": "Office of CEO",
+        "exec_sponsor": "Shantanu Phatakwala (CCO)",
+        "fte_allocated": 0.5,
+        "spend_quarterly_usd": 75_000,
+        "target_revenue_year_one_usd": 0,
+        "target_design_partners": 0,
+        "current_design_partners": 0,
+        "top_blocker": "Need to define source-of-truth boundaries before syncing CRM and research-derived contacts.",
+        "next_milestone": "CRM field mapping and dedupe rules",
+        "next_milestone_date": date(2026, 6, 12),
+        "metadata": {"source": "Neal V0.2 feedback", "mapped_relationships": ["customer", "pilot", "prospect"]},
+    },
+])
+
 
 WORKSTREAMS: list[dict] = [
     # NBL-RCM

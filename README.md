@@ -107,10 +107,10 @@ This project is built on ~24,000 words of grounded research compiled by parallel
 - **`research/03-regulatory-landscape.md`** — 4,508 words on FDA / CMS / state law / ONC HTI-1 / CHAI / Joint Commission / HIPAA / EU AI Act.
 - **`research/04-customer-landscape.md`** — 7,902 words on 32 IDNs, 12 pharma sponsors, payers, ASCs, specialty MSOs — with named CMIOs/CDOs/CAIOs.
 
-The seed data in `backend/app/data/` distills this into:
-- 35 organizations (customers, prospects, competitors, partners, regulators)
-- 24 named contacts (publicly disclosed executives)
-- 9 strategic initiatives (5 NBLs + 1 partnership + 2 strategic projects + 1 core)
+The V0.2 seed data in `backend/app/data/` distills this into:
+- 41 organizations (customers, prospects, competitors, partners, regulators)
+- 58 named contacts (publicly disclosed executives and GTM-relevant leaders)
+- 25 strategic initiatives (NBLs, core platform work, partnerships, GTM motions, and internal ops)
 - 18 workstream entries
 - 15 seed signals + 15 hand-crafted implications
 

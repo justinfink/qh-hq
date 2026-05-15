@@ -8,6 +8,7 @@ import asyncio
 import hashlib
 import logging
 import os
+import re
 from functools import lru_cache
 from typing import Literal
 
@@ -19,6 +20,7 @@ EMBEDDING_DIM = 1024
 VOYAGE_MODEL = "voyage-3-large"
 OPENAI_MODEL = "text-embedding-3-small"  # supports custom dimensions
 FASTEMBED_MODEL = "BAAI/bge-large-en-v1.5"
+TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9_+\-]{1,}", re.IGNORECASE)
 
 
 @lru_cache(maxsize=1)
@@ -75,6 +77,27 @@ def _key(text: str, input_type: str) -> str:
 
 def _zero_vector() -> list[float]:
     return [0.0] * EMBEDDING_DIM
+
+
+def _hash_vector(text: str) -> list[float]:
+    """Deterministic lexical fallback when no embedding provider is configured.
+
+    It is not a replacement for semantic embeddings, but it preserves useful
+    term overlap for local demos and prevents pgvector search from degenerating
+    into all-zero ties.
+    """
+    vec = [0.0] * EMBEDDING_DIM
+    for token in TOKEN_RE.findall(text.lower()):
+        digest = hashlib.sha256(token.encode()).digest()
+        idx = int.from_bytes(digest[:4], "big") % EMBEDDING_DIM
+        sign = 1.0 if digest[4] & 1 else -1.0
+        weight = 1.0 + min(len(token), 16) / 16
+        vec[idx] += sign * weight
+
+    norm = sum(v * v for v in vec) ** 0.5
+    if norm == 0:
+        return vec
+    return [v / norm for v in vec]
 
 
 async def _openai_embed(texts: list[str]) -> list[list[float]] | None:
@@ -141,7 +164,9 @@ async def embed_text(
         _cache[key] = vec
         return vec
 
-    return _zero_vector()
+    vec = _hash_vector(text)
+    _cache[key] = vec
+    return vec
 
 
 async def embed_batch(
@@ -187,7 +212,7 @@ async def embed_batch(
 
     model = _fastembed_model()
     if model is None:
-        return [_zero_vector() for _ in texts]
+        return [_hash_vector(text) for text in texts]
 
     loop = asyncio.get_running_loop()
     embeddings = await loop.run_in_executor(None, lambda: list(model.embed(texts)))
