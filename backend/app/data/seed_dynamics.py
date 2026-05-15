@@ -237,6 +237,110 @@ DYNAMICS: list[dict] = [
 
     # ── PARTNERS ──────────────────────────────────────────────────────────
     {
+        "org_name": "Hackensack Meridian Health",
+        "relationship_strength": 2,
+        "trajectory": "improving",
+        "strategic_value": "high",
+        "tailwinds": [
+            "New CDIO creates an executive evaluation window for AI governance vendors",
+            "Northeast market adjacency lets QH reuse Jefferson and NYC H+H proof points",
+            "Academic/community mix creates cross-setting governance complexity",
+        ],
+        "headwinds": [
+            "No public QH warm-intro path yet",
+            "Existing EHR and analytics vendors will frame governance as an add-on",
+        ],
+        "qh_leverage": ["Jefferson-style quality registry and care-gap examples are regionally credible"],
+        "qh_exposure": ["Must establish executive sponsor before vendor list hardens"],
+        "watch_signals": ["Joel Klein public roadmap", "AI governance hiring", "new ambient/clinical AI vendor announcements"],
+    },
+    {
+        "org_name": "AdventHealth",
+        "relationship_strength": 3,
+        "trajectory": "improving",
+        "strategic_value": "high",
+        "tailwinds": [
+            "First CAIO indicates dedicated AI budget and executive authority",
+            "Faith-based system similarity makes Mercy reference unusually relevant",
+            "RCM and workforce relief are CFO-friendly entry points",
+        ],
+        "headwinds": [
+            "Large multi-state procurement can slow even high-intent AI programs",
+            "New CAIO may prefer internal platform build before external governance layer",
+        ],
+        "qh_leverage": ["Mercy proof plus RCM coding agent maps directly to CFO/CAIO agenda"],
+        "qh_exposure": ["CAIO agenda could be captured by cloud or EHR incumbents first"],
+        "watch_signals": ["Rob Purinton talks", "AI center hiring", "finance transformation announcements"],
+    },
+    {
+        "org_name": "Advocate Health",
+        "relationship_strength": 2,
+        "trajectory": "stable",
+        "strategic_value": "high",
+        "tailwinds": [
+            "Very large nonprofit system creates strong enterprise-control-plane need",
+            "Vendor sprawl across ambulatory, acute, and digital channels favors neutral governance",
+        ],
+        "headwinds": [
+            "Scale creates complex stakeholder map and long cycle times",
+            "Innovation office may prefer venture/partner build paths over external control plane",
+        ],
+        "qh_leverage": ["Emory/Mercy references fit large nonprofit operating realities"],
+        "qh_exposure": ["Need a named executive pain point to avoid generic platform pitch"],
+        "watch_signals": ["AI partnership announcements", "clinical automation pilots", "enterprise governance policy"],
+    },
+    {
+        "org_name": "Mass General Brigham",
+        "relationship_strength": 2,
+        "trajectory": "stable",
+        "strategic_value": "high",
+        "tailwinds": [
+            "AI-mature AMC can validate QH governance primitives with academic credibility",
+            "Research workflows overlap with FDA, pharma, and model evaluation initiatives",
+        ],
+        "headwinds": [
+            "Strong internal AI bench may resist external governance platform framing",
+            "MGB may evaluate QH as a research collaborator before a buyer",
+        ],
+        "qh_leverage": ["Stanford/IHI/academic leadership credibility improves opener quality"],
+        "qh_exposure": ["Must avoid being positioned as generic vendor instead of governance partner"],
+        "watch_signals": ["new AI trial infrastructure", "model evaluation publications", "digital governance roles"],
+    },
+    {
+        "org_name": "Providence",
+        "relationship_strength": 2,
+        "trajectory": "stable",
+        "strategic_value": "high",
+        "tailwinds": [
+            "Large mission-driven footprint creates multi-state compliance and governance complexity",
+            "Digital innovation history makes platform conversation credible",
+        ],
+        "headwinds": [
+            "Providence has historically built and spun out internal digital assets",
+            "Cloud incumbents may own first call on AI governance",
+        ],
+        "qh_leverage": ["Multi-state and workforce enablement narrative maps to Providence operating scale"],
+        "qh_exposure": ["Need to differentiate from internal innovation platform efforts"],
+        "watch_signals": ["AI vendor partnerships", "digital workforce programs", "state AI compliance updates"],
+    },
+    {
+        "org_name": "Trinity Health",
+        "relationship_strength": 2,
+        "trajectory": "stable",
+        "strategic_value": "high",
+        "tailwinds": [
+            "Large Catholic nonprofit system where Mercy can act as reference bridge",
+            "Mission/safety framing aligns with QH's PBC and governance posture",
+        ],
+        "headwinds": [
+            "Very large federated operating model can make enterprise standards slow to adopt",
+            "Finance scrutiny may require hard ROI before broad platform sale",
+        ],
+        "qh_leverage": ["Mercy reference plus RCM/margin proof is the cleanest opener"],
+        "qh_exposure": ["If no CFO/CEO pain is active, conversation drifts to innovation theater"],
+        "watch_signals": ["workflow automation investments", "CIO changes", "system AI policy formation"],
+    },
+    {
         "org_name": "Anthropic",
         "relationship_strength": 9,
         "trajectory": "improving",

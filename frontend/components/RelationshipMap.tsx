@@ -27,6 +27,20 @@ const REL_COLOR: Record<string, string> = {
   ecosystem: "text-[var(--color-fg-3)]",
 };
 
+const STRATEGIC_VALUE_RANK: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
+function orgRank(o: Organization) {
+  const dyn = o.metadata?.dynamics;
+  const valueRank = STRATEGIC_VALUE_RANK[dyn?.strategic_value ?? ""] ?? 4;
+  const strength = dyn?.relationship_strength ?? 0;
+  return valueRank * 100 - strength;
+}
+
 export default function RelationshipMap({
   selectedId,
   onSelect,
@@ -44,9 +58,14 @@ export default function RelationshipMap({
   }, []);
 
   const groupOrder = ["customer", "pilot", "prospect", "partner", "competitor", "investor", "regulator_watch", "ecosystem"];
+  const trackedOrgs = orgs.filter((o) => o.name !== "Qualified Health");
+  const customerCount = trackedOrgs.filter((o) => o.relationship === "customer" || o.relationship === "pilot").length;
+  const prospectCount = trackedOrgs.filter((o) => o.relationship === "prospect").length;
   const grouped = groupOrder.map((rel) => ({
     rel,
-    orgs: orgs.filter((o) => o.relationship === rel && o.name !== "Qualified Health"),
+    orgs: orgs
+      .filter((o) => o.relationship === rel && o.name !== "Qualified Health")
+      .sort((a, b) => orgRank(a) - orgRank(b) || a.name.localeCompare(b.name)),
   })).filter((g) => g.orgs.length > 0);
 
   const filtered = filter === "all" ? grouped : grouped.filter((g) => g.rel === filter);
@@ -67,6 +86,15 @@ export default function RelationshipMap({
             <option key={g} value={g}>{RELATIONSHIP_LABEL[g]}</option>
           ))}
         </select>
+      </div>
+
+      <div className="bb px-3 py-1.5 grid grid-cols-2 gap-2 font-mono text-[10px] tabular">
+        <div className="text-[var(--color-accent)]">
+          {customerCount} customers/pilots
+        </div>
+        <div className="text-[#4FA8D8] text-right">
+          {prospectCount} prospects surveyed
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -108,6 +136,11 @@ export default function RelationshipMap({
                         {relStrengthBar(dyn.relationship_strength)}
                       </span>{" "}
                       <span>{dyn.relationship_strength}/10</span>
+                    </div>
+                  )}
+                  {org.relationship === "prospect" && org.metadata?.gtm_motion && (
+                    <div className="mt-1 text-[10px] text-[#4FA8D8] leading-snug">
+                      {org.metadata.gtm_motion}
                     </div>
                   )}
                 </button>

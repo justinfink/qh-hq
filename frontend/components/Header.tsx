@@ -87,14 +87,14 @@ export default function Header({
         <div className="live-dot" />
         <span className="text-display text-[18px] leading-none text-[var(--color-fg)]">QH HQ</span>
         <span className="font-mono text-[10px] text-[var(--color-fg-4)] uppercase tracking-widest pl-2">
-          v0.1 · public sources
+          v0.2 · public + GTM sources
         </span>
       </div>
 
       <nav className="flex items-center gap-0.5 ml-2">
         {navItem("Feed", mode === "feed", () => onModeChange("feed"), "1")}
         {navItem("Initiatives", false, onJumpInitiatives, "2")}
-        {navItem("Customers", false, onJumpCustomers, "3")}
+        {navItem("Relationships", false, onJumpCustomers, "3")}
         {navItem("Agents", false, onJumpAgents, "4")}
       </nav>
 
